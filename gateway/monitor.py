@@ -7,35 +7,77 @@ import logging as log
 from logging import DEBUG, INFO
 import datetime
 
-DEFAULT_DEVICE = '/dev/tty.usbmodem1441'
+DEFAULT_DEVICE = '/dev/tty.usbmodem1461'
 LOG_FORMAT = '%(asctime)s %(levelname)s: %(message)s'
 
 def processTalk(influx_client, talk):
     type = talk[0].split("/")[1]
     node = talk[0].split("/")[0]
     measurement = talk[1]
-    measurement_date = datetime.datetime.now()
 
     if type == "thermometer":
-        table = "temperature"
-        value_tag = "temp"
-        value = measurement['temperature'][0]
-    elif type == "lux-meter":
-        table = "illuminance"
-        value_tag = "illuminance"
-        value = measurement['illuminance'][0]
-
-    json_body = [
-        {
-            "measurement": table,
-            "tags": {
-                "node": node
-            },
-            "fields": {
-                value_tag: value
+        json_body = [
+            {
+                "measurement": "temperature",
+                "tags": {
+                    "node": node
+                },
+                "fields": {
+                    "temp": measurement['temperature'][0]
+                }
             }
-        }
-    ]
+        ]
+    elif type == "lux-meter":
+        json_body = [
+            {
+                "measurement": "illuminance",
+                "tags": {
+                    "node": node
+                },
+                "fields": {
+                    "illuminance": measurement['illuminance'][0]
+                }
+            }
+        ]
+    elif type == "barometer":
+        json_body = [
+            {
+                "measurement": "barometer",
+                "tags": {
+                    "node": node
+                },
+                "fields":{
+                    "pressure": measurement['pressure'][0],
+                    "altitude": measurement['altitude'][0]
+                 }
+            }
+        ]
+    elif type == "humidity-sensor":
+        json_body = [
+            {
+                "measurement": "humidity",
+                "tags": {
+                    "node": node
+                },
+                "fields":{
+                    "relative-humidity": measurement['relative-humidity'][0]
+                 }
+            }
+        ]
+    elif type == "co2-module":
+        json_body = [
+            {
+                "measurement": "co2",
+                "tags": {
+                    "node": node
+                },
+                "fields":{
+                    "concentration": measurement['concentration'][0]
+                 }
+            }
+        ]
+
+
     influx_client.write_points(json_body)
 
 def main():
@@ -44,7 +86,7 @@ def main():
     serial = Serial(DEFAULT_DEVICE, timeout=3.0)
     serial.write(b'\n')
 
-    client = InfluxDBClient('localhost', 8086, '', '', 'uclFreezertor')
+    client = InfluxDBClient('localhost', 8086, '', '', 'uclClimateStation')
 
     while True:
         line = serial.readline()

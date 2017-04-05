@@ -16,7 +16,7 @@ Climate Station is an application demonstating usage of BigClown Core Module, wi
 ### Base Station
 
 - 1x BigClown Core Module
-- 1x igClown Base Module
+- 1x BigClown Base Module
 
 ### Remote Station
 

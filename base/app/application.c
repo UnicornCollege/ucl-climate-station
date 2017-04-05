@@ -1,7 +1,7 @@
 #include <application.h>
 
-#define PREFIX_TALK_BASE "freezetor001-base"
-#define PREFIX_TALK_REMOTE "freezetor001-remote"
+#define PREFIX_TALK_BASE "climate-station-001-base"
+#define PREFIX_TALK_REMOTE "climate-station-001-remote"
 
 // LED instance
 bc_led_t led;
@@ -54,8 +54,6 @@ void bc_radio_on_thermometer(uint32_t *peer_device_address, uint8_t *i2c, float 
 {
     (void) peer_device_address;
 
-    bc_led_pulse(&led, 10);
-
     usb_talk_publish_thermometer(PREFIX_TALK_REMOTE, i2c, temperature);
 }
 
@@ -63,9 +61,28 @@ void bc_radio_on_lux_meter(uint32_t *peer_device_address, uint8_t *i2c, float *i
 {
     (void) peer_device_address;
 
-    bc_led_pulse(&led, 10);
-
     usb_talk_publish_lux_meter(PREFIX_TALK_REMOTE, i2c, illuminance);
+}
+
+void bc_radio_on_humidity(uint32_t *peer_device_address, uint8_t *i2c, float *percentage)
+{
+    (void) peer_device_address;
+
+    usb_talk_publish_humidity_sensor(PREFIX_TALK_REMOTE, i2c, percentage);
+}
+
+void bc_radio_on_barometer(uint32_t *peer_device_address, uint8_t *i2c, float *pressure, float *altitude)
+{
+    (void) peer_device_address;
+
+    usb_talk_publish_barometer(PREFIX_TALK_REMOTE, i2c, pressure, altitude);
+}
+
+void bc_radio_on_co2(uint32_t *peer_device_address, uint8_t *i2c, int16_t *concentration)
+{
+    (void) peer_device_address;
+
+    usb_talk_publish_co2_concentation(PREFIX_TALK_REMOTE, i2c, concentration);
 }
 
 void application_init(void) {

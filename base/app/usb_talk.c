@@ -85,11 +85,9 @@ void usb_talk_publish_push_button(const char *prefix, uint16_t *event_count)
 void usb_talk_publish_thermometer(const char *prefix, uint8_t *i2c, float *temperature)
 {
 
-    uint8_t number = (*i2c & ~0x80) == BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT ? 0 : 1;
-
     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/thermometer/%d:%d/temperature\", %0.2f]\n",
-                prefix, ((*i2c & 0x80) >> 7), number, *temperature);
+                "[\"%s/thermometer/i2c%d-%02x\", {\"temperature\": [%0.2f, \"\\u2103\"]}]\n",
+                prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *temperature);
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }
@@ -97,26 +95,9 @@ void usb_talk_publish_thermometer(const char *prefix, uint8_t *i2c, float *tempe
 void usb_talk_publish_humidity_sensor(const char *prefix, uint8_t *i2c, float *relative_humidity)
 {
 
-    uint8_t number;
-
-    switch((*i2c & ~0x80))
-    {
-        case 0x5f:
-            number = 0;
-            break;
-        case 0x40:
-            number = 2;
-            break;
-        case 0x41:
-            number = 3;
-            break;
-        default:
-            number = 0;
-    }
-
-    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/hygrometer/%d:%d/relative-humidity\", %0.1f]\n",
-                prefix, ((*i2c & 0x80) >> 7), number, *relative_humidity);
+     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
+                    "[\"%s/humidity-sensor/i2c%d-%02x\", {\"relative-humidity\": [%0.1f, \"%%\"]}]\n",
+                    prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *relative_humidity);
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }
@@ -124,11 +105,9 @@ void usb_talk_publish_humidity_sensor(const char *prefix, uint8_t *i2c, float *r
 void usb_talk_publish_lux_meter(const char *prefix, uint8_t *i2c, float *illuminance)
 {
 
-    uint8_t number = (*i2c & ~0x80) == BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT ? 0 : 1;
-
     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/lux-meter/%d:%d/illuminance\", %0.1f]\n",
-                prefix, ((*i2c & 0x80) >> 7), number, *illuminance);
+                    "[\"%s/lux-meter/i2c%d-%02x\", {\"illuminance\": [%0.1f, \"lux\"]}]\n",
+                    prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *illuminance);
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }
@@ -136,40 +115,25 @@ void usb_talk_publish_lux_meter(const char *prefix, uint8_t *i2c, float *illumin
 void usb_talk_publish_barometer(const char *prefix, uint8_t *i2c, float *pressure, float *altitude)
 {
     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/barometer/%d:0/pressure\", %0.2f]\n",
-                prefix, ((*i2c & 0x80) >> 7), *pressure);
-
-    usb_talk_send_string((const char *) _usb_talk.tx_buffer);
-
-    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/barometer/%d:0/altitude\", %0.2f]\n",
-                prefix, ((*i2c & 0x80) >> 7), *altitude);
+                        "[\"%s/barometer/i2c%d-%02x\", {\"pressure\": [%0.2f, \"kPa\"], \"altitude\": [%0.2f, \"m\"]}]\n",
+                        prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *pressure, *altitude);
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }
 
-void usb_talk_publish_co2_concentation(const char *prefix, int16_t *concentration)
+void usb_talk_publish_co2_concentation(const char *prefix, uint8_t *i2c, int16_t *concentration)
 {
     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/co2-meter/-/concentration\", %" PRIu16 "]\n",
-                prefix, *concentration);
+                        "[\"%s/co2-module/i2c%d-%02x\", {\"concentration\": [%" PRIu16 ", \"ppm\"]}]\n",
+                        prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *concentration);
 
-    usb_talk_send_string((const char *) _usb_talk.tx_buffer);
+    usb_talk_send_string((const char *) _usb_talk.tx_buffer); 
 }
-void usb_talk_publish_rfid_tag(const char *prefix, uint8_t *rfid_tag)
-{
-    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/rfid-reader/-/tag\", %" PRIu8 "]\n",
-                prefix, *rfid_tag);
 
-    usb_talk_send_string((const char *) _usb_talk.tx_buffer);
-
-}
 void usb_talk_publish_light(const char *prefix, bool *state)
 {
-    snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                "[\"%s/light/-/state\", %s]\n",
-                prefix, *state ? "true" : "false");
+     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer), "[\"%s/light/-\", {\"state\": %s}]\n",
+            prefix, *state ? "true" : "false");
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }

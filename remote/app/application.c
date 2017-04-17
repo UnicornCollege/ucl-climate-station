@@ -129,7 +129,7 @@ void climate_event_handler(bc_module_climate_event_t event, void *event_param)
 void co2_event_handler(bc_module_co2_event_t event, void *event_param) 
 {
     (void) event_param;
-    int16_t value;
+    float value;
     static uint8_t i2c_co2 = 0x38;
 
     switch (event)

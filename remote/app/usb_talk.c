@@ -103,10 +103,10 @@ void usb_talk_publish_barometer(const char *prefix, uint8_t *i2c, float *pressur
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }
 
-void usb_talk_publish_co2_concentation(const char *prefix, uint8_t *i2c, int16_t *concentration)
+void usb_talk_publish_co2_concentation(const char *prefix, uint8_t *i2c, float *concentration)
 {
     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                        "[\"%s/co2-module/i2c%d-%02x\", {\"concentration\": [%" PRIu16 ", \"ppm\"]}]\n",
+                        "[\"%s/co2-module/i2c%d-%02x\", {\"concentration\": [%0.2f, \"ppm\"]}]\n",
                         prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *concentration);
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);    

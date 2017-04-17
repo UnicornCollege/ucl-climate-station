@@ -213,7 +213,7 @@ bool bc_radio_pub_barometer(uint8_t i2c, float *pascal, float *meter)
     return true;
 }
 
-bool bc_radio_pub_co2(uint8_t i2c, int16_t *concentration)
+bool bc_radio_pub_co2(uint8_t i2c, float *concentration)
 {
     uint8_t buffer[2 + sizeof(*concentration)];
 

@@ -27,7 +27,7 @@ void usb_talk_publish_thermometer(const char *prefix, uint8_t *i2c, float *tempe
 void usb_talk_publish_humidity_sensor(const char *prefix, uint8_t *i2c, float *relative_humidity);
 void usb_talk_publish_lux_meter(const char *prefix, uint8_t *i2c, float *illuminance);
 void usb_talk_publish_barometer(const char *prefix, uint8_t *i2c, float *pascal, float *altitude);
-void usb_talk_publish_co2_concentation(const char *prefix, int16_t *concentration);
+void usb_talk_publish_co2_concentation(const char *prefix, uint8_t *i2c, int16_t *concentration);
 void usb_talk_publish_light(const char *prefix, bool *state);
 void usb_talk_publish_relay(const char *prefix, bool *state);
 void usb_talk_publish_module_relay(const char *prefix, uint8_t *number, bc_module_relay_state_t *state);

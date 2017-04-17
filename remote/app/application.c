@@ -3,6 +3,7 @@
 
 #define PREFIX_TALK_REMOTE "climate-station-001-remote"
 #define DEBUG false
+#define MEASUREMENT_DELAY 60000
 
 // LED instance
 bc_led_t led;
@@ -48,15 +49,15 @@ void application_init(void) {
 
     // Initialize climate module
     bc_module_climate_init();
-    bc_module_climate_set_update_interval_thermometer(10000);
-    bc_module_climate_set_update_interval_lux_meter(10000);
-    bc_module_climate_set_update_interval_hygrometer(10000);
-    bc_module_climate_set_update_interval_barometer(10000);
+    bc_module_climate_set_update_interval_thermometer(MEASUREMENT_DELAY);
+    bc_module_climate_set_update_interval_lux_meter(MEASUREMENT_DELAY);
+    bc_module_climate_set_update_interval_hygrometer(MEASUREMENT_DELAY);
+    bc_module_climate_set_update_interval_barometer(MEASUREMENT_DELAY);
     bc_module_climate_set_event_handler(climate_event_handler, NULL);
 
     // Initialize CO2 module
     bc_module_co2_init();
-    bc_module_co2_set_update_interval(10000);
+    bc_module_co2_set_update_interval(MEASUREMENT_DELAY);
     bc_module_co2_set_event_handler(co2_event_handler, NULL);
 }
 

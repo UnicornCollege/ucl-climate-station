@@ -99,8 +99,6 @@ void application_init(void) {
     bc_radio_init();
     bc_radio_set_event_handler(radio_event_handler, NULL);
     bc_radio_listen();
-
-    bc_module_climate_init();
 }
 
 void application_task()

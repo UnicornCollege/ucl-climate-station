@@ -1,16 +1,19 @@
-#include <stm32l0xx.h>
+// http://www.mouser.com/ds/2/365/LS013B7DH03%20SPEC_SMA-224806.pdf
+// https://www.embeddedartists.com/sites/default/files/support/datasheet/Memory_LCD_Programming.pdf
+// https://www.silabs.com/documents/public/application-notes/AN0048.pdf
 
+#include <bc_module_lcd.h>
+#include <stm32l0xx.h>
 #include <bc_spi.h>
 #include <bc_tca9534a.h>
 #include <bc_scheduler.h>
-
-#include <bc_module_lcd.h>
 
 #define _BC_MODULE_LCD_DISP_ON   0x04
 #define _BC_MODULE_LCD_LED_GREEN 0x10
 #define _BC_MODULE_LCD_LED_RED   0x20
 #define _BC_MODULE_LCD_LED_BLUE  0x40
 #define _BC_MODULE_LCD_DISP_CS   0x80
+#define _BC_MODULE_LCD_VCOM_PERIOD 15000
 
 typedef struct bc_module_lcd_t
 {
@@ -18,9 +21,12 @@ typedef struct bc_module_lcd_t
     void *event_param;
     bc_tca9534a_t tca9534a;
     uint8_t *framebuffer;
-    const tFont *font;
+    const bc_font_t *font;
     uint8_t gpio;
     bc_module_lcd_rotation_t rotation;
+    uint8_t vcom;
+    bc_scheduler_task_id_t task_id;
+
 } bc_module_lcd_t;
 
 bc_module_lcd_t _bc_module_lcd;
@@ -29,6 +35,9 @@ uint8_t reverse2(uint32_t b) {
 
 	return __RBIT(b) >> 24;
 }
+
+static void _bc_module_lcd_spi_transfer(uint8_t *buffer, size_t length);
+static void _bc_module_lcd_task(void *param);
 
 void bc_module_lcd_init(bc_module_lcd_framebuffer_t *framebuffer)
 {
@@ -43,11 +52,18 @@ void bc_module_lcd_init(bc_module_lcd_framebuffer_t *framebuffer)
 
     self->framebuffer = framebuffer->framebuffer;
 
-    // TODO: remove after passing the font pointer
-    // bc_module_lcd_set_font(0);
+    // Address lines
+    uint8_t line;
+    uint32_t offs;
+    for (line = 0x01, offs = 1; line <= 128; line++, offs += 18) {
+        // Fill the gate line addresses on the exact place in the buffer
+        self->framebuffer[offs] = reverse2(line);
+    }
 
     // Prepare buffer so the background is "white" reflective
     bc_module_lcd_clear();
+
+    _bc_module_lcd.task_id = bc_scheduler_register(_bc_module_lcd_task, NULL, _BC_MODULE_LCD_VCOM_PERIOD);
 }
 
 void bc_module_lcd_on(void)
@@ -132,46 +148,34 @@ int bc_module_lcd_draw_char(int left, int top, uint8_t ch)
 {
     bc_module_lcd_t *self = &_bc_module_lcd;
 
-    const tFont *font = self->font;
+    const bc_font_t *font = self->font;
 
     int w = 0;
     uint8_t h = 0;
-
     uint16_t i;
-    for( i = 0; i < font->length; i++)
+    uint16_t x;
+    uint16_t y;
+    uint8_t bytes;
+
+    for (i = 0; i < font->length; i++)
     {
-        if(font->chars[i].code == ch)
+        if (font->chars[i].code == ch)
         {
             w = font->chars[i].image->width;
             h = font->chars[i].image->heigth;
 
-            // TODO: Optimize
-            uint8_t bytes;
-            if(w > 24)
-            {
-                bytes = 4;
-            }
-            else if(w > 16)
-            {
-                bytes = 3;
-            } else if(w > 8) {
-                bytes = 2;
-            } else {
-                bytes = 1;
-            }
+            bytes = (w + 7) / 8;
 
-            uint16_t x;
-            uint16_t y;
-            for(y = 0; y < h; y++)
+            for (y = 0; y < h; y++)
             {
-                for(x = 0; x < w; x++)
+                for (x = 0; x < w; x++)
                 {
                     uint32_t byteIndex = x / 8;
                     byteIndex += y * bytes;
 
                     uint8_t bitMask = 1 << (7 - (x % 8));
 
-                    if(font->chars[i].image->image[byteIndex] & bitMask)
+                    if (font->chars[i].image->image[byteIndex] & bitMask)
                     {
                         bc_module_lcd_draw_pixel(left + x, top + y, false);
                     }
@@ -221,38 +225,24 @@ Framebuffer format for updating multiple lines, ideal for later DMA TX:
 */
 void bc_module_lcd_update(void)
 {
-
     bc_module_lcd_t *self = &_bc_module_lcd;
+    self->framebuffer[0] = 0x80 | self->vcom;
 
-    uint8_t spi_data[2];
-    uint8_t line;
-    uint32_t offs;
+    _bc_module_lcd_spi_transfer(self->framebuffer, BC_LCD_FRAMEBUFFER_SIZE);
 
-    // Send MODE
-    spi_data[0] = 0xd0;
-    spi_data[1] = 0x00;
+    self->vcom ^= 0x40;
 
-    _bc_module_lcd.gpio &= ~_BC_MODULE_LCD_DISP_CS;
-    bc_tca9534a_write_port(&_bc_module_lcd.tca9534a, _bc_module_lcd.gpio);
-
-    bc_spi_transfer(spi_data, NULL, 2);
-
-    self->framebuffer[0] = 0x80;
-
-    // Address lines
-    for (line = 0x01, offs = 1; line <= 128; line++, offs += 18) {
-        // Fill the gate line addresses on the exact place in the buffer
-        self->framebuffer[offs] = reverse2(line);
-    }
-
-    bc_spi_transfer(&self->framebuffer[0], NULL, BC_LCD_FRAMEBUFFER_SIZE);
-
-    _bc_module_lcd.gpio |= _BC_MODULE_LCD_DISP_CS;
-    bc_tca9534a_write_port(&_bc_module_lcd.tca9534a, _bc_module_lcd.gpio);
+    bc_scheduler_plan_relative(self->task_id, _BC_MODULE_LCD_VCOM_PERIOD);
 }
 
-// TODO: pass pointer
-void bc_module_lcd_set_font(const tFont *font)
+void bc_module_lcd_clear_memory_command(void)
+{
+    uint8_t spi_data[2] = {0x20, 0x00};
+
+    _bc_module_lcd_spi_transfer(spi_data, sizeof(spi_data));
+}
+
+void bc_module_lcd_set_font(const bc_font_t *font)
 {
     _bc_module_lcd.font = font;
 }
@@ -265,4 +255,28 @@ void bc_module_lcd_set_rotation(bc_module_lcd_rotation_t rotation)
 bc_module_lcd_rotation_t bc_module_lcd_get_rotation(void)
 {
     return _bc_module_lcd.rotation;
+}
+
+static void _bc_module_lcd_spi_transfer(uint8_t *buffer, size_t length)
+{
+    _bc_module_lcd.gpio &= ~_BC_MODULE_LCD_DISP_CS;
+    bc_tca9534a_write_port(&_bc_module_lcd.tca9534a, _bc_module_lcd.gpio);
+
+    bc_spi_transfer(buffer, NULL, length);
+
+    _bc_module_lcd.gpio |= _BC_MODULE_LCD_DISP_CS;
+    bc_tca9534a_write_port(&_bc_module_lcd.tca9534a, _bc_module_lcd.gpio);
+}
+
+static void _bc_module_lcd_task(void *param)
+{
+    (void) param;
+
+    uint8_t spi_data[2] = {_bc_module_lcd.vcom, 0x00};
+
+    _bc_module_lcd_spi_transfer(spi_data, sizeof(spi_data));
+
+    _bc_module_lcd.vcom ^= 0x40;
+
+    bc_scheduler_plan_current_relative(_BC_MODULE_LCD_VCOM_PERIOD);
 }

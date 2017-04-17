@@ -67,6 +67,8 @@ void bc_module_climate_set_update_interval_lux_meter(bc_tick_t interval);
 
 void bc_module_climate_set_update_interval_barometer(bc_tick_t interval);
 
+bool bc_module_climate_get_temperature_raw(int16_t *raw);
+
 //! @brief Get measured temperature in degrees of Celsius
 //! @param[in] celsius Pointer to variable where result will be stored
 //! @return true When value is valid

@@ -97,8 +97,8 @@ void usb_talk_publish_lux_meter(const char *prefix, uint8_t *i2c, float *illumin
 void usb_talk_publish_barometer(const char *prefix, uint8_t *i2c, float *pressure, float *altitude)
 {
     snprintf(_usb_talk.tx_buffer, sizeof(_usb_talk.tx_buffer),
-                        "[\"%s/barometer/i2c%d-%02x\", {\"pressure\": [%0.2f, \"kPa\"], \"altitude\": [%0.2f, \"m\"]}]\n",
-                        prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *pressure, *altitude);
+                        "[\"%s/barometer/i2c%d-%02x\", {\"pressure\": [%0.2f, \"hPa\"], \"altitude\": [%0.2f, \"m\"]}]\n",
+                        prefix, ((*i2c & 0x80) >> 7), (*i2c & ~0x80), *pressure/100, *altitude);
 
     usb_talk_send_string((const char *) _usb_talk.tx_buffer);
 }

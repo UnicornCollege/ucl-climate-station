@@ -7,7 +7,7 @@ import logging as log
 from logging import DEBUG, INFO
 import datetime
 
-DEFAULT_DEVICE = '/dev/tty.usbmodem1461'
+DEFAULT_DEVICE = '/dev/tty.usbmodem1451'
 LOG_FORMAT = '%(asctime)s %(levelname)s: %(message)s'
 
 def processTalk(influx_client, talk):

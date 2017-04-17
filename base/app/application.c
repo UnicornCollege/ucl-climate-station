@@ -1,4 +1,5 @@
 #include <application.h>
+#include <usb_talk.h>
 
 #define PREFIX_TALK_BASE "climate-station-001-base"
 #define PREFIX_TALK_REMOTE "climate-station-001-remote"
@@ -78,11 +79,11 @@ void bc_radio_on_barometer(uint32_t *peer_device_address, uint8_t *i2c, float *p
     usb_talk_publish_barometer(PREFIX_TALK_REMOTE, i2c, pressure, altitude);
 }
 
-void bc_radio_on_co2(uint32_t *peer_device_address, uint8_t *i2c, int16_t *concentration)
+void bc_radio_on_co2(uint32_t *peer_device_address, float *concentration)
 {
     (void) peer_device_address;
 
-    usb_talk_publish_co2_concentation(PREFIX_TALK_REMOTE, i2c, concentration);
+    usb_talk_publish_co2_concentation(PREFIX_TALK_REMOTE, concentration);
 }
 
 void application_init(void) {

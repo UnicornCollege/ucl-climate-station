@@ -1,6 +1,7 @@
 obj/sdk/bcl/src/bc_usb_cdc.o: sdk/bcl/src/bc_usb_cdc.c \
  sdk/bcl/inc/bc_usb_cdc.h sdk/bcl/inc/bc_common.h \
- sdk/bcl/inc/bc_scheduler.h sdk/bcl/inc/bc_tick.h sdk/bcl/inc/bc_fifo.h \
+ sdk/bcl/inc/bc_scheduler.h sdk/bcl/inc/bc_tick.h \
+ sdk/bcl/inc/bc_module_core.h sdk/bcl/inc/bc_fifo.h \
  sdk/stm/usb/inc/usbd_core.h sdk/bcl/stm/inc/usbd_conf.h \
  sdk/sys/inc/stm32l0xx.h sdk/sys/inc/stm32l083xx.h \
  sdk/sys/inc/core_cm0plus.h sdk/sys/inc/core_cmInstr.h \

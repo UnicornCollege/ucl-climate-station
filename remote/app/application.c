@@ -1,9 +1,10 @@
 #include <application.h>
+#include <usb_talk.h>
 #include <bcl.h>
 
 #define PREFIX_TALK_REMOTE "climate-station-001-remote"
 #define DEBUG false
-#define MEASUREMENT_DELAY 60000
+#define MEASUREMENT_DELAY 10000
 
 // LED instance
 bc_led_t led;
@@ -130,7 +131,6 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
 {
     (void) event_param;
     float value;
-    static uint8_t i2c_co2 = 0x38;
 
     switch (event)
     {
@@ -138,9 +138,9 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
             if (bc_module_co2_get_concentration(&value)) 
             {
                 if (DEBUG) {
-                    usb_talk_publish_co2_concentation(PREFIX_TALK_REMOTE, &i2c_co2, &value);
+                    usb_talk_publish_co2_concentation(PREFIX_TALK_REMOTE, &value);
                 } else {
-                    bc_radio_pub_co2(i2c_co2, &value);
+                    bc_radio_pub_co2(&value);
                 }
             }
             break;

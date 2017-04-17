@@ -71,11 +71,6 @@ bool bc_module_climate_get_temperature_celsius(float *celsius)
     return bc_tmp112_get_temperature_celsius(&_bc_module_climate.tmp112, celsius);
 }
 
-bool bc_module_climate_get_temperature_raw(int16_t *raw)
-{
-    return bc_tmp112_get_temperature_raw(&_bc_module_climate.tmp112, raw);
-}
-
 bool bc_module_climate_get_temperature_fahrenheit(float *fahrenheit)
 {
     return bc_tmp112_get_temperature_fahrenheit(&_bc_module_climate.tmp112, fahrenheit);

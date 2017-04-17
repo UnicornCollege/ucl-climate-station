@@ -11,72 +11,23 @@ DEFAULT_DEVICE = '/dev/tty.usbmodem1451'
 LOG_FORMAT = '%(asctime)s %(levelname)s: %(message)s'
 
 def processTalk(influx_client, talk):
+    print (talk)
     type = talk[0].split("/")[1]
     node = talk[0].split("/")[0]
-    measurement = talk[1]
+    measurement = talk[0].split("/")[3]
+    value = talk[1]
 
-    if type == "thermometer":
-        json_body = [
-            {
-                "measurement": "temperature",
-                "tags": {
-                    "node": node
-                },
-                "fields": {
-                    "temp": measurement['temperature'][0]
-                }
+    json_body = [
+        {
+            "measurement": type,
+            "tags": {
+                "node": node
+            },
+            "fields": {
+                measurement: value
             }
-        ]
-    elif type == "lux-meter":
-        json_body = [
-            {
-                "measurement": "illuminance",
-                "tags": {
-                    "node": node
-                },
-                "fields": {
-                    "illuminance": measurement['illuminance'][0]
-                }
-            }
-        ]
-    elif type == "barometer":
-        json_body = [
-            {
-                "measurement": "barometer",
-                "tags": {
-                    "node": node
-                },
-                "fields":{
-                    "pressure": measurement['pressure'][0],
-                    "altitude": measurement['altitude'][0]
-                 }
-            }
-        ]
-    elif type == "humidity-sensor":
-        json_body = [
-            {
-                "measurement": "humidity",
-                "tags": {
-                    "node": node
-                },
-                "fields":{
-                    "relative-humidity": measurement['relative-humidity'][0]
-                 }
-            }
-        ]
-    elif type == "co2-module":
-        json_body = [
-            {
-                "measurement": "co2",
-                "tags": {
-                    "node": node
-                },
-                "fields":{
-                    "concentration": measurement['concentration'][0]
-                 }
-            }
-        ]
-
+        }
+    ]
 
     influx_client.write_points(json_body)
 

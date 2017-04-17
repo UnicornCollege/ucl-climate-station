@@ -23,4 +23,5 @@ obj/sdk/bcl/src/bc_ws2812b.o: sdk/bcl/src/bc_ws2812b.c \
  sdk/stm/hal/inc/stm32l0xx_hal_pcd.h \
  sdk/stm/hal/inc/stm32l0xx_hal_pcd_ex.h sdk/bcl/inc/bc_ws2812b.h \
  sdk/bcl/inc/bc_led_strip.h sdk/bcl/inc/bc_scheduler.h \
- sdk/bcl/inc/bc_tick.h sdk/bcl/inc/bc_common.h
+ sdk/bcl/inc/bc_tick.h sdk/bcl/inc/bc_common.h \
+ sdk/bcl/inc/bc_module_core.h

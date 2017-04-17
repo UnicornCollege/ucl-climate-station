@@ -17,6 +17,7 @@ typedef enum
     BC_RADIO_HEADER_PUB_LUX_METER,
     BC_RADIO_HEADER_PUB_BAROMETER,
     BC_RADIO_HEADER_PUB_CO2,
+    BC_RADIO_HEADER_PUB_BUFFER
 
 } bc_radio_header_t;
 
@@ -62,7 +63,9 @@ __attribute__((weak)) void bc_radio_on_thermometer(uint32_t *peer_device_address
 __attribute__((weak)) void bc_radio_on_humidity(uint32_t *peer_device_address, uint8_t *i2c, float *percentage) { (void) peer_device_address; (void) i2c; (void) percentage; }
 __attribute__((weak)) void bc_radio_on_lux_meter(uint32_t *peer_device_address, uint8_t *i2c, float *illuminance) { (void) peer_device_address; (void) i2c; (void) illuminance; }
 __attribute__((weak)) void bc_radio_on_barometer(uint32_t *peer_device_address, uint8_t *i2c, float *pressure, float *altitude) { (void) peer_device_address; (void) i2c; (void) pressure; (void) altitude; }
-__attribute__((weak)) void bc_radio_on_co2(uint32_t *peer_device_address, uint8_t *i2c, int16_t *concentration) { (void) peer_device_address; (void) i2c; (void) concentration; }
+__attribute__((weak)) void bc_radio_on_co2(uint32_t *peer_device_address, float *concentration) { (void) peer_device_address; (void) concentration; }
+__attribute__((weak)) void bc_radio_on_buffer(uint32_t *peer_device_address, void *buffer, size_t *length) { (void) peer_device_address; (void) buffer; (void) length; }
+
 
 void bc_radio_init(void)
 {
@@ -213,14 +216,13 @@ bool bc_radio_pub_barometer(uint8_t i2c, float *pascal, float *meter)
     return true;
 }
 
-bool bc_radio_pub_co2(uint8_t i2c, float *concentration)
+bool bc_radio_pub_co2(float *concentration)
 {
-    uint8_t buffer[2 + sizeof(*concentration)];
+    uint8_t buffer[1 + sizeof(*concentration)];
 
     buffer[0] = BC_RADIO_HEADER_PUB_CO2;
-    buffer[1] = i2c;
 
-    memcpy(&buffer[2], concentration, sizeof(*concentration));
+    memcpy(&buffer[1], concentration, sizeof(*concentration));
 
     if (!bc_queue_put(&_bc_radio.pub_queue, buffer, sizeof(buffer)))
     {
@@ -229,7 +231,31 @@ bool bc_radio_pub_co2(uint8_t i2c, float *concentration)
 
     bc_scheduler_plan_now(_bc_radio.task_id);
 
-    return true;    
+    return true;
+}
+
+bool bc_radio_pub_buffer(void *buffer, size_t length)
+{
+    uint8_t qbuffer[1 + BC_SPIRIT1_MAX_PACKET_SIZE - 6];
+
+    if (length > (1 + BC_SPIRIT1_MAX_PACKET_SIZE - 6))
+    {
+        return false;
+    }
+
+    qbuffer[0] = BC_RADIO_HEADER_PUB_BUFFER;
+
+    memcpy(&qbuffer[1], buffer, length);
+
+    if (!bc_queue_put(&_bc_radio.pub_queue, qbuffer, length + 1))
+    {
+        return false;
+    }
+
+    bc_scheduler_plan_now(_bc_radio.task_id);
+
+    return true;
+
 }
 
 static void _bc_radio_task(void *param)
@@ -322,11 +348,16 @@ static void _bc_radio_task(void *param)
         }
         else if (queue_item_buffer[0] == BC_RADIO_HEADER_PUB_CO2)
         {
-            int16_t concentration;
+            float concentration;
 
-            memcpy(&concentration, &queue_item_buffer[2], sizeof(concentration));
+            memcpy(&concentration, &queue_item_buffer[1], sizeof(concentration));
 
-            bc_radio_on_co2(&_bc_radio.peer_device_address, &queue_item_buffer[1], &concentration);
+            bc_radio_on_co2(&_bc_radio.peer_device_address, &concentration);
+        }
+        else if (queue_item_buffer[0] == BC_RADIO_HEADER_PUB_BUFFER)
+        {
+            queue_item_length -= 1;
+            bc_radio_on_buffer(&_bc_radio.peer_device_address, &queue_item_buffer[1], &queue_item_length);
         }
 
     }

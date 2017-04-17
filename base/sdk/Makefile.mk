@@ -79,13 +79,14 @@ SRC_DIR += $(SDK_DIR)/sys/src
 # Toolchain                                                                    #
 ################################################################################
 
-TOOLCHAIN = arm-none-eabi-
+TOOLCHAIN ?= arm-none-eabi-
 CC = $(TOOLCHAIN)gcc
+GDB = $(TOOLCHAIN)gdb
 OBJCOPY = $(TOOLCHAIN)objcopy
 SIZE = $(TOOLCHAIN)size
-OZONE = Ozone
-DFU_UTIL = dfu-util
-DOXYGEN = doxygen
+OZONE ?= Ozone
+DFU_UTIL ?= dfu-util
+DOXYGEN ?= doxygen
 
 ################################################################################
 # Compiler flags for "c" files                                                 #
@@ -106,6 +107,7 @@ CFLAGS += -D'USE_HAL_DRIVER'
 CFLAGS += -D'STM32L083xx'
 CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
+CFLAGS += -std=c11
 CFLAGS_DEBUG += -g3
 CFLAGS_DEBUG += -Og
 CFLAGS_RELEASE += -Os
@@ -215,13 +217,22 @@ doc:
 	$(Q)sh -c 'cd $(SDK_DIR) && $(DOXYGEN) Doxyfile'
 
 ################################################################################
+# Debug firmware using GDB debugger (using Segger J-Link probe)                #
+################################################################################
+
+.PHONY: gdb
+gdb: debug
+	$(Q)$(ECHO) "Launching GDB debugger..."
+	$(Q)$(GDB) -x $(SDK_DIR)/tools/gdb/gdbinit $(ELF)
+
+################################################################################
 # Debug firmware using Ozone debugger (from Segger)                            #
 ################################################################################
 
 .PHONY: ozone
 ozone: debug
 	$(Q)$(ECHO) "Launching Ozone debugger..."
-	$(Q)$(OZONE) tools/ozone/ozone.jdebug
+	$(Q)$(OZONE) $(SDK_DIR)/tools/ozone/ozone.jdebug
 
 ################################################################################
 # Link object files                                                            #

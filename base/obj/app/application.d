@@ -18,4 +18,4 @@ obj/app/application.o: app/application.c app/application.h \
  sdk/bcl/inc/bc_tca9534a.h sdk/bcl/inc/bc_module_sigfox.h \
  sdk/bcl/inc/bc_td1207r.h sdk/bcl/inc/bc_wssfm10r1at.h \
  sdk/bcl/inc/bc_module_lcd.h sdk/bcl/inc/bc_font_common.h \
- sdk/bcl/inc/bc_module_co2.h
+ sdk/bcl/inc/bc_module_co2.h app/usb_talk.h sdk/bcl/inc/jsmn.h

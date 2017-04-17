@@ -17,8 +17,7 @@ typedef enum
 
 } bc_module_lcd_event_t;
 
-extern const tFont Font;
-extern const tFont FontBig;
+
 
 // See app note https://www.silabs.com/documents/public/application-notes/AN0048.pdf
 // Figure 3.1
@@ -89,10 +88,14 @@ int bc_module_lcd_draw_string(int left, int top, char *str);
 
 void bc_module_lcd_update(void);
 
-//! @brief Lcd set font
-//! @param[in] tFont *font
+//! @brief Send Lcd clear memory command
 
-void bc_module_lcd_set_font(const tFont *font);
+void bc_module_lcd_clear_memory_command(void);
+
+//! @brief Lcd set font
+//! @param[in] bc_font_t *font
+
+void bc_module_lcd_set_font(const bc_font_t *font);
 
 //! @brief Lcd set rotation
 //! @param[in] bc_module_lcd_rotation_t rotation
